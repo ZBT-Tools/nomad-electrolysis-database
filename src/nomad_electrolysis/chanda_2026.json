@@ -1,0 +1,83 @@
+{
+  "doi": "10.1002/smsc.70388",
+  "citation": "Chanda et al. (2026), Small Science 6, e70388",
+  "sources": [
+    {
+      "id": "article",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13533152/",
+      "version": "version of record",
+      "license_evidence": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13533152/#article-notes",
+      "included": true
+    },
+    {
+      "id": "supplement",
+      "url": "https://pmc.ncbi.nlm.nih.gov/articles/instance/13533152/bin/SMSC-6-e70388-s001.pdf",
+      "status": "unverified",
+      "included": false,
+      "reason": "No applicable license verified for the supplement."
+    },
+    {
+      "id": "edmond_xas",
+      "url": "https://doi.org/10.17617/3.85ZMIB",
+      "status": "unverified",
+      "included": false,
+      "reason": "Dataset license not verified. Dataset identified in the article's data availability statement."
+    }
+  ],
+  "columns": {
+    "#1": {"catalyst": "MnO2-Nb-F", "csv_test_type": "Beaker cell", "setup": "oer_half_cell"},
+    "#2": {"catalyst": "MnO2-Nb-F", "csv_test_type": "single-cell", "setup": "pem_single_cell"},
+    "#4": {"catalyst": "MnO2-Nb", "csv_test_type": "Beaker cell", "setup": "oer_half_cell"},
+    "#5": {"catalyst": "MnO2", "csv_test_type": "Beaker cell", "setup": "oer_half_cell"}
+  },
+  "component_compositions": {
+    "MnO2-Nb-F": {"elements": ["Mn", "O", "Nb", "F"], "reference": "Chanda et al., Section 2"},
+    "MnO2-Nb": {"elements": ["Mn", "O", "Nb"], "reference": "Chanda et al., Section 2"},
+    "MnO2": {"elements": ["Mn", "O"], "reference": "Chanda et al., Section 2"},
+    "H2SO4": {"elements": ["H", "S", "O"], "reference": "Chanda et al., Section 2 and Figure 3"},
+    "DI water": {"elements": ["H", "O"], "reference": "Chanda et al., Section 2 and Figure S33 reference"},
+    "Pt-coated titanium felt": {"elements": ["Pt", "Ti"], "reference": "Chanda et al., Section 2, catalyst preparation and MEA assembly"},
+    "20 wt% Pt/C": {"elements": ["Pt", "C"], "reference": "Chanda et al., Section 2 and Figure 4"},
+    "Nafion 115": {
+      "elements": ["C", "F", "H", "O", "S"],
+      "reference": "Chanda et al., Section 2, for model; Chemours, Nafion N115, for PFSA/PTFE polymer chemistry",
+      "reference_url": "https://www.nafion.com/en/products/sulfonic-membranes"
+    }
+  },
+  "setups": {
+    "oer_half_cell": {
+      "electrolyte": "H2SO4",
+      "substrate": "Pt-coated titanium felt",
+      "setup_reference": "Section 2 and Figure 3"
+    },
+    "pem_single_cell": {
+      "technology": "PEM",
+      "feed_medium": "DI water",
+      "substrate": "Pt-coated titanium felt",
+      "membrane": "Nafion 115",
+      "cathode_catalyst": "20 wt% Pt/C",
+      "setup_reference": "Section 2 and Figure 4"
+    }
+  },
+  "methods": {
+    "lsv": {"label": "Linear sweep voltammetry"},
+    "eis": {"label": "Electrochemical impedance spectroscopy"},
+    "cv": {"label": "Cyclic voltammetry"},
+    "halfcell_durability": {"label": "Chronopotentiometry", "control_mode": "constant_current"},
+    "pem_polarization": {"label": "Steady-state polarization"},
+    "pem_durability": {"label": "PEM durability test", "control_mode": "constant_current"}
+  },
+  "series": [
+    {"field": "Overpotential", "quantity": "overpotential", "method": "lsv", "unit": "mV", "source_unit": "V", "source_scale": 1000, "reference": "Figure 3a and Section 2"},
+    {"field": "Tafel Slope", "quantity": "tafel_slope", "method": "lsv", "unit": "mV/dec", "reference": "Figure 3b and Section 2"},
+    {"field": "Impedance", "quantity": "charge_transfer_resistance", "method": "eis", "unit": "ohm*cm^2", "reference": "Figure 3c and Section 2", "approximate": ["#1"]},
+    {"field": "ECSA", "quantity": "double_layer_capacitance_areal", "method": "cv", "unit": "mF/cm^2", "reference": "Figure 3d and Section 2"},
+    {"field": "Mass activity", "quantity": "mass_activity", "method": "lsv", "unit": "A/g", "reference": "Figure 3e and Section 2"},
+    {"field": "Specific Activity", "quantity": "capacitance_normalized_activity", "method": "lsv", "unit": "A/F", "reference": "Figure 3e and Section 2"},
+    {"field": "Stability", "quantity": "test_duration", "rule": "halfcell_duration", "method": "halfcell_durability", "unit": "h", "reference": "Figure 3f and Section 2"},
+    {"field": "Degradation", "quantity": "electrode_potential_drift_rate", "method": "halfcell_durability", "unit": "mV/h", "reference": "Figure 3f and Section 2", "notes": "Exact fit bounds were not verified."},
+    {"field": "Performance", "quantity": "cell_voltage", "method": "pem_polarization", "unit": "V", "reference": "Figure 4a and Section 2"},
+    {"field": "Stability", "quantity": "test_duration", "rule": "pem_duration", "method": "pem_durability", "unit": "h", "reference": "Figure 4d and Abstract"},
+    {"field": "Degradation", "quantity": "cell_voltage_drift_rate", "method": "pem_durability", "unit": "mV/h", "reference": "Figure 4d and Conclusion", "notes": "Reported average. Exact evaluation interval was not specified for this value. Figure 4 discussion reports separate segment-wise rates."}
+  ]
+}

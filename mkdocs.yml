@@ -1,0 +1,8 @@
+site_name: NOMAD Electrolysis Database
+site_description: Explore electrolysis literature data in NOMAD
+repo_url: https://github.com/ZBT-Tools/nomad-electrolysis-database
+theme:
+  name: material
+nav:
+  - Overview: index.md
+  - Installation and import: how_to/install.md

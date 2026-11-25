@@ -1,0 +1,2 @@
+include src/nomad_electrolysis/chanda_2026.json
+recursive-include tests *.py

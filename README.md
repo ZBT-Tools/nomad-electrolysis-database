@@ -1,84 +1,40 @@
-# nomad-plugin-template
-A template repository for creating a repository with a NOMAD plugin package.
+# NOMAD Electrolysis Database
 
+A NOMAD 2.0 plugin for exploring curated electrolysis literature data. The Explore app filters by elements, electrochemical methods, electrolyte, setup and characterization. Each sample and experimental setup has a flat archive entry. The Chanda example has four entries, with the durability current density beside the test duration. The extractor writes original values, units, license evidence and source locations to a separate review report.
 
-## Getting started
-
-1. Click on the `Use this template` button and create a new plugin repository. The form will ask you to fill out the name for the new plugin repository.
-
-2. In the newly created repository, start a new Github Codespace and generate the plugin structure.
-
-Run the following command to create a new NOMAD plugin project using cookiecutter-nomad-plugin:
+## Development
 
 ```sh
-cruft create https://github.com/FAIRmat-NFDI/cookiecutter-nomad-plugin
+uv sync --extra dev
+uv run ruff check .
+uv run ruff format --check .
+uv run pytest
+uv run mkdocs build --strict
+uv build
 ```
 
-Cookiecutter prompts you for information regarding your plugin:
+The development extra uses NOMAD 2.0.0, the version used by the ZBT test Oasis.
 
-```no-highlight
-full_name [John Doe]: Citizen Kane
-email [john.doe@physik.hu-berlin.de]: citizen@kane.de
-github_username [foo]: kane
-plugin_name [foobar]: awesome-tools
-module_name [awesome_tools]: awesome_tools
-short_description [NOMAD example template]: An awesome plugin for NOMAD
-version [0.1.0]:
-Select license:
-1 - MIT
-2 - BSD-3
-3 - GNU GPL v3.0+
-Choose from 1, 2, 3 [1]: 2
-include_schema_package [y/n] (y): y
-include_normalizer [y/n] (y): n
-include_parser [y/n] (y): y
-include_app [y/n] (y): n
+## Create the Chanda import
 
-INFO:post_gen_project:Initializing python for package - src
-..
-INFO:post_gen_project:Remove temporary folder: licenses
-INFO:post_gen_project:Remove temporary folder: macros
-INFO:post_gen_project:Remove temporary folder: py_sources
-```
-
-
-
-
-There you go - you just created a minimal NOMAD plugin:
-
-> [!NOTE]
-> In the above prompt, we pressed `y` for schema_package and parser, this creates a python package with two plugin entry points: one for parser and one for schema_package.
-
-```no-highlight
-nomad-awesome-tools/
-├── LICENSE
-├── README.rst
-├── pyproject.toml
-├── move_template_files.sh
-├── src
-│   └── nomad_awesome_tools
-│       ├── __init__.py
-|       ├── schema_packages
-│       |   ├── __init__.py
-│       |   └── plugin.py
-|       └── parsers
-│           ├── __init__.py
-│           └── plugin.py
-|
-├── tests
-│   ├── conftest.py
-│   └── test_awesome.py
-└── MANIFEST.in
-```
-
-
-> [!NOTE]
-> The project `nomad-awesome-tools` is created in a new directory, we have included a helper script to move all the files to the parent level of the repository.
-
+The extractor takes the Chanda gallery CSV and the version-of-record JATS XML. Download the XML from the [PMC open-access archive](https://pmc-oa-opendata.s3.amazonaws.com/PMC13533152.1/PMC13533152.1.xml). Pass both files to the installed command:
 
 ```sh
-sh CHANGE_TO_PLUGIN_NAME/move_template_files.sh
+uv run electrolyse-data-extractor gallery.csv --article-xml chanda_2026.jats.xml --explore
 ```
 
-> [!IMPORTANT]
-> The `CHANGE_TO_PLUGIN_NAME` should be substituted by the name of the plugin you've created. In the above case it'll be `sh nomad-awesome-tools/move_template_files.sh`. 
+Upload `output/chanda-2026-explore.zip` to an unpublished project after installing the plugin. Open **Explore → Use Cases → Elektrolyse**. To generate self-contained archives for NOMAD's built-in archive parser, omit `--explore`. The source check is specific to Chanda et al. ([paper and CC BY 4.0 notice](https://pmc.ncbi.nlm.nih.gov/articles/PMC13533152/)).
+
+## Install on the ZBT test Oasis
+
+In the Oasis distribution, add the plugin to the `plugins` extra in `pyproject.toml`, pinning the tested Git revision:
+
+```toml
+"nomad-electrolysis-database @ git+https://github.com/ZBT-Tools/nomad-electrolysis-database.git@<COMMIT-SHA>",
+```
+
+Replace any previous `nomad-electrolysis` wheel dependency and its local source override. Both distributions expose the same Python import path and schema identity. Run `uv lock`, build the test image from the `for_plugin_test` branch, and roll out its `app` and `worker` services. If the Oasis uses a plugin allowlist, enable `nomad_electrolysis.apps:electrolysis_app` and `nomad_electrolysis.schema_packages:electrolysis_schema`.
+
+## Licenses
+
+The plugin code uses the Apache License 2.0. The Chanda paper uses CC BY 4.0. The full text and generated import packages are supplied separately. The extractor records publication and license provenance, and its output is marked for the test Oasis.

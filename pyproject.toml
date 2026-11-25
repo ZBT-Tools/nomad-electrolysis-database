@@ -1,0 +1,136 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+name = "nomad-electrolysis-database"
+description = "NOMAD Explore app and schema for electrolysis literature data"
+version = "0.3.0"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "ZBT Tools" }]
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+dependencies = [
+    "nomad-lab>=2.0,<3",
+]
+
+[project.scripts]
+electrolyse-data-extractor = "nomad_electrolysis.extractor:main"
+
+[project.urls]
+Repository = "https://github.com/ZBT-Tools/nomad-electrolysis-database"
+
+[project.optional-dependencies]
+dev = [
+    "nomad-lab==2.0.0",
+    "ruff",
+    "pytest",
+    "mkdocs",
+    "mkdocs-material",
+]
+
+[tool.uv]
+extra-index-url = [
+  "https://gitlab.mpcdf.mpg.de/api/v4/projects/2187/packages/pypi/simple",
+]
+
+[tool.ruff]
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+# Same as Black.
+line-length = 88
+indent-width = 4
+
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # isort
+    "I",
+    # pylint
+    "PL",
+]
+
+ignore = [
+    "F403", # 'from module import *' used; unable to detect undefined names
+    "PLC0415", # `import` should be at the top-level of a file
+    "E501", # line too long
+]
+
+fixable = ["ALL"]
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["PLC0415"] # import-outside-top-level
+
+# this is entirely optional, you can remove this if you wish to
+[tool.ruff.format]
+# use single quotes for strings.
+quote-style = "single"
+
+# indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+nomad_electrolysis = ["chanda_2026.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[project.entry-points.'nomad.plugin']
+electrolysis_schema = "nomad_electrolysis.schema_packages:electrolysis_schema"
+electrolysis_app = "nomad_electrolysis.apps:electrolysis_app"
+
+[tool.cruft]
+# Avoid updating workflow files, this leads to permissions issues
+skip = [".github/*"]
