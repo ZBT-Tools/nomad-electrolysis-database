@@ -5,4 +5,5 @@ theme:
   name: material
 nav:
   - Overview: index.md
-  - Installation and import: how_to/install.md
+  - Installation and use: how_to/install.md
+  - Literature data extractor: how_to/extractor.md

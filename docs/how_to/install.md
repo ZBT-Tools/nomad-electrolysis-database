@@ -1,11 +1,39 @@
-# Installation and import
+# Install and use the plugin
 
-Install the plugin in the NOMAD 2.0 distribution and deploy that environment to both the app and worker. The [repository README](https://github.com/ZBT-Tools/nomad-electrolysis-database#install-on-the-zbt-test-oasis) lists the Git dependency and entry points for the ZBT test Oasis.
+The plugin requires Python 3.11 or later and NOMAD 2.x. Install both plugin entry points in the NOMAD environment that serves the Explore app and processes uploads.
 
-Generate the Chanda example with the gallery CSV and the [licensed JATS full text](https://pmc-oa-opendata.s3.amazonaws.com/PMC13533152.1/PMC13533152.1.xml):
+## Install into an existing NOMAD environment
+
+Install from Git:
 
 ```sh
-uv run electrolyse-data-extractor gallery.csv --article-xml chanda_2026.jats.xml --explore
+python -m pip install "nomad-electrolysis-database @ git+https://github.com/ZBT-Tools/nomad-electrolysis-database.git"
 ```
 
-Upload the Explore ZIP to an unpublished project. Once processing completes, open **Explore → Use Cases → Elektrolyse**. The four entries include a PEM durability result of 380 h at 0.4 A/cm². The review JSON in the upload provides provenance for the extracted values.
+Use a tested tag or commit to pin a Git installation. If you have a built wheel, install it by passing its path:
+
+```sh
+python -m pip install "path/to/plugin.whl"
+```
+
+## Add the plugin to a container-based NOMAD distribution
+
+Add the package to the distribution dependency group installed by the NOMAD image. For a distribution that uses a `plugins` extra, add the following entry to that list and replace `<COMMIT-SHA>` with the tested revision:
+
+```toml
+"nomad-electrolysis-database @ git+https://github.com/ZBT-Tools/nomad-electrolysis-database.git@<COMMIT-SHA>",
+```
+
+Update the distribution lockfile, build the image and roll it out to the application and processing workers. See the [NOMAD Oasis configuration guide](https://docs.nomad-lab.eu/develop/howto/oasis/configure.html#plugins).
+
+NOMAD discovers installed plugin entry points automatically. If the distribution restricts enabled entry points, include both of the following in its existing configuration:
+
+- `nomad_electrolysis.apps:electrolysis_app`
+- `nomad_electrolysis.schema_packages:electrolysis_schema`
+
+## Import and explore
+
+1. Prepare an import package in Explore mode using the [literature data extractor](extractor.md).
+2. Upload the ZIP to an unpublished NOMAD project and wait for processing to finish.
+3. Open **Explore → Use Cases → Elektrolyse**. Use the method and element filters to find entries and compare their performance and operating points.
+4. Open the review JSON in the project's files to inspect source locations, unit conversions and input conflicts.

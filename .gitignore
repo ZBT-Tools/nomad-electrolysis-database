@@ -131,4 +131,5 @@ dmypy.json
 # Local demo builds and template generation
 output/
 .bootstrap/
+/docs-local/
 !.python-version

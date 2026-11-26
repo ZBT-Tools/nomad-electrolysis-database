@@ -1,5 +1,8 @@
 # NOMAD Electrolysis Database
 
-Use the Elektrolyse Explore app to compare OER half-cell and PEM single-cell results. The table shows OER overpotential at 10 mA/cm², PEM cell voltage at 1 A/cm², and durability duration with its current density. Characterization columns record which methods were reported for the catalyst.
+The Elektrolyse Explore app supports comparison of curated electrolysis data. The schema stores one entry per catalyst and experimental setup. The results table shows performance at specified operating points and keeps durability duration alongside its current density.
 
-One archive entry represents one catalyst and experimental setup. Original values, units, source locations, CSV conflicts and license evidence are available in the review report included with the upload.
+Use the periodic table, electrochemical methods and setup filters to find relevant entries. The characterization fields indicate which methods were reported for the catalyst. The review report included with each generated import links the comparison fields to their source evidence.
+
+- [Install and use the plugin](how_to/install.md)
+- [Prepare imports with the literature data extractor](how_to/extractor.md)
