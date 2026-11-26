@@ -24,11 +24,13 @@ dependencies = [
 
 [project.scripts]
 electrolyse-data-extractor = "nomad_electrolysis.extractor:main"
+electrolyse-literature = "nomad_electrolysis.literature:main"
 
 [project.urls]
 Repository = "https://github.com/ZBT-Tools/nomad-electrolysis-database"
 
 [project.optional-dependencies]
+literature = ["pypdf>=5"]
 dev = [
     "nomad-lab==2.0.0",
     "ruff",

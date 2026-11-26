@@ -6,7 +6,7 @@ A [NOMAD](https://nomad-lab.eu/) plugin for exploring curated electrolysis liter
 
 - **Schema package** for experimental conditions, comparable performance indicators and characterization method flags
 - **Explore app** with filters for elements, electrochemical methods, experimental setups and characterization
-- **Literature data extractor** that prepares archive uploads and records source locations, original values, unit conversions and license evidence in a review report
+- **Literature data extractor** that extends the gallery CSV from publication profiles, records provenance for each extracted field, and prepares archive uploads for supported import workflows
 
 ## Installation
 

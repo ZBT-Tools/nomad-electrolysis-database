@@ -1,8 +1,25 @@
 # Literature data extractor
 
-The extractor is a command-line tool that runs before the NOMAD upload. It takes a curated gallery CSV and the corresponding full-text article in JATS XML. The CSV identifies the samples and setup types. The XML supplies the published measurements and evidence for their provenance.
+The extractor runs before a NOMAD upload. Use the literature command to extend the gallery CSV from additional publications. Use the archive command to package records from the supported JATS import workflow.
 
-## Run the extractor
+## Extend the gallery CSV
+
+```sh
+python -m pip install ".[literature]"
+electrolyse-literature gallery.csv --source profile.json article.pdf --output-dir output/literature
+```
+
+Repeat `--source PROFILE DOCUMENT` for each publication. The command reads searchable PDFs, JATS XML, and UTF-8 text with optional form-feed page breaks. Keep one column ID per catalyst and experimental setup. Use the same IDs and citation strings on reruns. A conflicting value or citation stops the run before writing new output.
+
+Each JSON profile contains a `source` object with `doi`, `url`, `citation`, version information and a `license` object with `status`, `url` and `location`. It also contains a `samples` list. Each sample has a `column` (such as `#6`), a descriptive `label`, and a `fields` object keyed by the exact CSV row labels. A field rule includes the CSV `unit`, a human-readable `location`, and a Python regular expression `pattern`. For PDF rules, add the one-based `page` to constrain matching. For categorical fields, provide a fixed normalized `value` backed by the match. For numeric fields, capture the number in a group named `value` and provide a `reported_unit` and decimal `factor` if conversion is needed. Use `note` to record relevant conditions, caveats, or uncertainty. The license object also accepts an optional `pattern` and `page` to verify the license notice in the source.
+
+The profile author identifies the setup and checks that each result belongs to the right catalyst, operating point, and unit. Only a unique match populates a registered field. Unmapped fields stay blank. Use a reviewed source table or dataset when an exact number is available. A value read from a plot needs a documented digitization method and an uncertainty or precision estimate before it can be compared with tabulated values.
+
+The output contains a UTF-8 CSV and two review reports. Open the HTML report in a browser to find values by column ID, descriptor, or sample name. It links to the publication and, when a local PDF was supplied, to the relevant page. The JSON report records the original number, unit conversions, source locations, and SHA-256 checksums of the source, profile and CSV. License evidence is recorded per source. The output is for internal review and carries no publication approval.
+
+The `--add-electrode-and-durability-rows` option adds the agreed `Electrode role` and `Durability current density` descriptors when absent. Additional descriptors require an update to the gallery CSV and mappings.
+
+## Build a NOMAD upload
 
 ```sh
 electrolyse-data-extractor "path/to/gallery.csv" --article-xml "path/to/article.xml" --explore
@@ -10,7 +27,7 @@ electrolyse-data-extractor "path/to/gallery.csv" --article-xml "path/to/article.
 
 Use `--output-dir` to change the destination from the default `output/`. With `--explore`, the generated archives reference the installed plugin schema and are visible in the Explore app. Omitting the flag embeds the schema in the archives for use with NOMAD's built-in archive parser.
 
-The current release implements one publication-specific extraction profile. Its DOI and repository identifier, sample names and matching rules must agree with the inputs. Supporting another article requires a corresponding profile and extraction rules.
+The archive command currently supports one publication-specific import workflow. Its DOI and repository identifier, sample names and matching rules must agree with the inputs. It expects the source gallery CSV for that workflow. The literature command prepares a reviewable multi-publication CSV for downstream curation.
 
 ## How it works
 
