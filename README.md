@@ -20,7 +20,7 @@ For a reproducible deployment, pin a tested tag or commit. On a container-based 
 
 ## Usage
 
-Open **Explore → Use Cases → Elektrolyse** to browse entries. Use the periodic table or method filters to narrow the results, and compare measurements at the operating points shown in the column headings.
+Open **Explore → Use Cases → Electrolysis** to browse entries. Use the periodic table or method filters to narrow the results, and compare measurements at the operating points shown in the column headings.
 
 The [extractor guide](docs/how_to/extractor.md) describes required inputs, supported sources and the contents of the generated archives and review report.
 

@@ -51,7 +51,7 @@ def quantity_definitions(strings, numbers, units):
 
 def archive_definitions():
     records = quantity_definitions(
-        'name record_id csv_column catalyst reaction setup_type '
+        'name record_id csv_column catalyst reaction electrode_role setup_type '
         'technology electrolyte substrate feed_medium membrane cathode_catalyst test_type synthesis '
         'characterization_methods '
         'article_doi article_license article_citation article_url review_file release_status',

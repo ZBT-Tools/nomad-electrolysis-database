@@ -69,7 +69,7 @@ GALLERY_FIELD_MAP = {
 } | {label: (field, None) for label, field in CHARACTERIZATION_FIELDS.items()}
 
 
-def read_gallery_csv(payload, columns):
+def read_gallery_csv(payload, columns, *, allow_extra_columns=False):
     table = list(
         csv.reader(io.StringIO(payload.decode('utf-8-sig'), newline=''), strict=True)
     )
@@ -79,9 +79,17 @@ def read_gallery_csv(payload, columns):
         )
     header = table[1]
     column_names = header[3:]
-    if len(column_names) != len(columns) or set(column_names) != set(columns):
+    if len(column_names) != len(set(column_names)) or not set(columns) <= set(
+        column_names
+    ):
         raise ValueError('CSV columns must match the curated Chanda evidence.')
-    if table[0] != ['', '', ''] + [CSV_SOURCE] * len(columns):
+    if not allow_extra_columns and len(column_names) != len(columns):
+        raise ValueError('CSV columns must match the curated Chanda evidence.')
+    if (
+        len(table[0]) != len(header)
+        or table[0][:3] != ['', '', '']
+        or any(table[0][header.index(column)] != CSV_SOURCE for column in columns)
+    ):
         raise ValueError('Publication labels do not match the curated Chanda evidence.')
 
     fields = {}
@@ -508,6 +516,19 @@ def json_text(value):
     return json.dumps(value, ensure_ascii=False, indent=2, allow_nan=False) + '\n'
 
 
+def write_archive_zip(package_path, files):
+    package_path.parent.mkdir(parents=True, exist_ok=True)
+    with NamedTemporaryFile(dir=package_path.parent, delete=False) as tmp:
+        temporary_path = Path(tmp.name)
+    try:
+        with ZipFile(temporary_path, 'w', compression=ZIP_DEFLATED) as package:
+            for name, contents in files.items():
+                package.writestr(name, json_text(contents))
+        temporary_path.replace(package_path)
+    finally:
+        temporary_path.unlink(missing_ok=True)
+
+
 def build_package(csv_path, output_dir, article_path, explore=False):
     evidence_bytes = EVIDENCE.read_bytes()
     evidence = json.loads(evidence_bytes)
@@ -562,23 +583,12 @@ def build_package(csv_path, output_dir, article_path, explore=False):
         'checks': checks,
     }
 
-    output_dir.mkdir(parents=True, exist_ok=True)
     package_name = (
         'chanda-2026-explore.zip' if explore else 'chanda-2026-test-oasis.zip'
     )
     package_path = output_dir / package_name
     report_path = output_dir / REVIEW_FILENAME
-    # Stage the ZIP in the destination directory before replacing the previous build.
-    with NamedTemporaryFile(dir=output_dir, delete=False) as tmp:
-        temporary_path = Path(tmp.name)
-    try:
-        with ZipFile(temporary_path, 'w', compression=ZIP_DEFLATED) as package:
-            for name, contents in files.items():
-                package.writestr(name, json_text(contents))
-            package.writestr(report_path.name, json_text(report))
-        temporary_path.replace(package_path)
-    finally:
-        temporary_path.unlink(missing_ok=True)
+    write_archive_zip(package_path, files | {report_path.name: report})
     report_path.write_bytes(json_text(report).encode('utf-8'))
     return report
 

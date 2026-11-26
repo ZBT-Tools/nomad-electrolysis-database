@@ -12,7 +12,7 @@ classifiers = [
 ]
 name = "nomad-electrolysis-database"
 description = "NOMAD Explore app and schema for electrolysis literature data"
-version = "0.3.0"
+version = "0.4.1"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "ZBT Tools" }]
@@ -25,6 +25,7 @@ dependencies = [
 [project.scripts]
 electrolyse-data-extractor = "nomad_electrolysis.extractor:main"
 electrolyse-literature = "nomad_electrolysis.literature:main"
+electrolyse-gallery-import = "nomad_electrolysis.gallery_import:main"
 
 [project.urls]
 Repository = "https://github.com/ZBT-Tools/nomad-electrolysis-database"

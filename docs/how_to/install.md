@@ -35,5 +35,5 @@ NOMAD discovers installed plugin entry points automatically. If the distribution
 
 1. Prepare an import package in Explore mode using the [literature data extractor](extractor.md).
 2. Upload the ZIP to an unpublished NOMAD project and wait for processing to finish.
-3. Open **Explore → Use Cases → Elektrolyse**. Use the method and element filters to find entries and compare their performance and operating points.
+3. Open **Explore → Use Cases → Electrolysis**. Use the method and element filters to find entries and compare their performance and operating points.
 4. Open the review JSON in the project's files to inspect source locations, unit conversions and input conflicts.

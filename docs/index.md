@@ -1,6 +1,6 @@
 # NOMAD Electrolysis Database
 
-The Elektrolyse Explore app supports comparison of curated electrolysis data. The schema stores one entry per catalyst and experimental setup. The results table shows performance at specified operating points and keeps durability duration alongside its current density.
+The Electrolysis Explore app supports comparison of curated electrolysis data. The schema stores one entry per catalyst and experimental setup. The results table shows performance at specified operating points and displays the duration and current density of durability tests side by side.
 
 Use the periodic table, electrochemical methods and setup filters to find relevant entries. The characterization fields indicate which methods were reported for the catalyst. The review report included with each generated import links the comparison fields to their source evidence.
 

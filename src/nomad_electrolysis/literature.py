@@ -159,11 +159,11 @@ def review_html(report, pdf_links):
     for source in report['sources']:
         doi = source['doi']
         license_info = source['license']
-        publisher = link(source['url'], 'Publikation')
-        proof = link(license_info['url'], 'Lizenznachweis')
+        publisher = link(source['url'], 'Publication')
+        proof = link(license_info['url'], 'License evidence')
         if doi in pdf_links and (license_page := license_info.get('page')):
             proof += ' · ' + link(
-                f'{pdf_links[doi]}#page={license_page}', 'PDF-Lizenzvermerk'
+                f'{pdf_links[doi]}#page={license_page}', 'License notice in PDF'
             )
         head = (
             f'<h2>{escape(source["citation"])}</h2>'
@@ -184,14 +184,14 @@ def review_html(report, pdf_links):
             page = cell['page']
             if page and doi in pdf_links:
                 location += ' · ' + link(
-                    f'{pdf_links[doi]}#page={page}', f'PDF S. {page}'
+                    f'{pdf_links[doi]}#page={page}', f'PDF page {page}'
                 )
             raw = cell['reported_number'] or ''
             if raw:
                 raw += ' ' + (cell['reported_unit'] or cell['unit'])
             rows.append(
                 '<tr><td>'
-                + escape(f'{cell["column"]} · Zeile {cell["row"]}')
+                + escape(f'{cell["column"]} · Row {cell["row"]}')
                 + '</td><td>'
                 + escape(cell['sample'])
                 + '</td><td>'
@@ -209,20 +209,20 @@ def review_html(report, pdf_links):
         sections.append(
             head
             + (f'<ul>{notes}</ul>' if notes else '')
-            + '<table><thead><tr><th>CSV</th><th>Probe</th><th>Feld</th><th>Wert</th>'
-            '<th>Originalzahl</th><th>Fundstelle</th><th>Einordnung</th>'
+            + '<table><thead><tr><th>CSV</th><th>Sample</th><th>Field</th><th>Value</th>'
+            '<th>Reported value</th><th>Source location</th><th>Notes</th>'
             '</tr></thead><tbody>' + ''.join(rows) + '</tbody></table>'
         )
     return (
-        '<!doctype html><html lang="de"><meta charset="utf-8">'
+        '<!doctype html><html lang="en"><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width, initial-scale=1">'
-        '<title>Elektrolyse · Prüfbericht</title>'
+        '<title>Electrolysis Gallery Review Report</title>'
         '<style>body{font:16px system-ui;margin:2rem;color:#162333}'
         'table{border-collapse:collapse;width:100%}'
         'td,th{padding:.55rem;border:1px solid #cad3dd;text-align:left;vertical-align:top}'
         'th{background:#e9eff5}tr:nth-child(even){background:#f6f8fa}</style>'
-        '<h1>Prüfbericht zur Elektrolyse-CSV</h1>'
-        '<p>Interner Prüfstand. Die Tabellen zeigen die in diesem Lauf belegten Zellen.</p>'
+        '<h1>Electrolysis Gallery Review Report</h1>'
+        '<p>For internal review. The tables list the CSV cells supported by the sources checked in this run.</p>'
         + ''.join(sections)
         + '</html>\n'
     )

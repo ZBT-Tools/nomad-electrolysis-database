@@ -19,7 +19,17 @@ The output contains a UTF-8 CSV and two review reports. Open the HTML report in 
 
 The `--add-electrode-and-durability-rows` option adds the agreed `Electrode role` and `Durability current density` descriptors when absent. Additional descriptors require an update to the gallery CSV and mappings.
 
-## Build a NOMAD upload
+## Build a multi-publication NOMAD upload
+
+```sh
+electrolyse-gallery-import gallery-extended.csv gallery-review.json --output-dir output/imports
+```
+
+The command checks the CSV against the extraction report and creates one archive per sample column. The Explore ZIP uses the installed Electrolysis schema and requires plugin version 0.4.0 or later. The standalone ZIP embeds the schema and opens through NOMAD's archive parser. Use one ZIP per upload. Both packages include the review and license records and are intended for unpublished testing.
+
+Use `--components` to provide a reviewed JSON object mapping component names to lists of element symbols. If the CSV contains columns from the original JATS workflow, supply the original XML with `--article-xml`. Those columns keep their source-based measurements and conflict checks.
+
+## Build a publication-specific NOMAD upload
 
 ```sh
 electrolyse-data-extractor "path/to/gallery.csv" --article-xml "path/to/article.xml" --explore
@@ -27,7 +37,7 @@ electrolyse-data-extractor "path/to/gallery.csv" --article-xml "path/to/article.
 
 Use `--output-dir` to change the destination from the default `output/`. With `--explore`, the generated archives reference the installed plugin schema and are visible in the Explore app. Omitting the flag embeds the schema in the archives for use with NOMAD's built-in archive parser.
 
-The archive command currently supports one publication-specific import workflow. Its DOI and repository identifier, sample names and matching rules must agree with the inputs. It expects the source gallery CSV for that workflow. The literature command prepares a reviewable multi-publication CSV for downstream curation.
+This command expects the source gallery CSV for the publication-specific workflow. Its DOI and repository identifier, sample names and matching rules must agree with the inputs.
 
 ## How it works
 
