@@ -4,14 +4,22 @@ from nomad.config.models.plugins import AppEntryPoint
 from nomad.config.models.ui import (
     App,
     Axis,
+    AxisLimitedScale,
     Column,
+    Dashboard,
     Format,
+    Layout,
+    Markers,
     Menu,
     MenuItemHistogram,
     MenuItemPeriodicTable,
     MenuItemTerms,
     ResourceEnum,
     SearchQuantities,
+    WidgetHistogram,
+    WidgetPeriodicTable,
+    WidgetScatterPlot,
+    WidgetTerms,
 )
 
 from nomad_electrolysis.definitions import CHARACTERIZATION_FIELDS, SCHEMA_NAME
@@ -107,6 +115,82 @@ COLUMNS = [
     Column(search_quantity=field('article_doi'), title='Publication DOI'),
 ]
 
+DASHBOARD = Dashboard(
+    widgets=[
+        WidgetPeriodicTable(
+            title='Elements',
+            search_quantity=ELEMENTS,
+            layout={
+                'sm': Layout(x=0, y=0, w=12, h=8),
+                'md': Layout(x=0, y=0, w=18, h=8),
+                'lg': Layout(x=0, y=0, w=12, h=8),
+            },
+        ),
+        WidgetScatterPlot(
+            title='Durability test duration vs. current density',
+            description=(
+                'Each point represents a reported test. The duration can reflect '
+                'the planned test length. Tests at the same operating point and '
+                'duration may overlap.'
+            ),
+            x=AxisLimitedScale(
+                search_quantity=field('durability_current_density'),
+                title='Durability test current density',
+                unit='A/cm^2',
+                scale='log',
+            ),
+            y=AxisLimitedScale(
+                search_quantity=field('durability_hours'),
+                title='Durability test duration',
+                unit='h',
+            ),
+            markers=Markers(
+                color=Axis(
+                    search_quantity=field('setup_type'),
+                    title='Cell configuration',
+                )
+            ),
+            layout={
+                'sm': Layout(x=0, y=8, w=12, h=7),
+                'md': Layout(x=0, y=8, w=18, h=7),
+                'lg': Layout(x=12, y=0, w=12, h=8),
+            },
+        ),
+        WidgetTerms(
+            title='Entries by cell configuration',
+            description='Select a bar to filter the dashboard and results table.',
+            search_quantity=field('setup_type'),
+            show_input=False,
+            layout={
+                'sm': Layout(x=0, y=15, w=12, h=5),
+                'md': Layout(x=0, y=15, w=8, h=6),
+                'lg': Layout(x=0, y=8, w=10, h=6),
+            },
+        ),
+        WidgetHistogram(
+            title='Cell voltage at 1 A/cm²',
+            description=(
+                'Counts entries with a reported cell voltage at 1 A/cm². '
+                'Select a cell configuration for a comparison within that configuration.'
+            ),
+            x=Axis(
+                search_quantity=field('cell_voltage_at_1_a_cm2'),
+                title='Cell voltage at 1 A/cm²',
+                unit='V',
+            ),
+            y='linear',
+            n_bins=12,
+            autorange=True,
+            show_input=False,
+            layout={
+                'sm': Layout(x=0, y=20, w=12, h=6),
+                'md': Layout(x=8, y=15, w=10, h=6),
+                'lg': Layout(x=10, y=8, w=14, h=6),
+            },
+        ),
+    ]
+)
+
 electrolysis_app = AppEntryPoint(
     name='Electrolysis Gallery',
     description='Search curated electrolysis literature measurements.',
@@ -136,6 +220,7 @@ electrolysis_app = AppEntryPoint(
             ],
         ),
         columns=COLUMNS,
+        dashboard=DASHBOARD,
         menu=Menu(
             size='lg',
             items=[

@@ -12,7 +12,7 @@ classifiers = [
 ]
 name = "nomad-electrolysis-database"
 description = "NOMAD Explore app and schema for electrolysis literature data"
-version = "0.4.1"
+version = "0.4.2"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [{ name = "ZBT Tools" }]
