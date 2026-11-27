@@ -13,21 +13,25 @@ Repeat `--source PROFILE DOCUMENT` for each publication. The command reads searc
 
 Each JSON profile contains a `source` object with `doi`, `url`, `citation`, version information and a `license` object with `status`, `url` and `location`. It also contains a `samples` list. Each sample has a `column` (such as `#6`), a descriptive `label`, and a `fields` object keyed by the exact CSV row labels. A field rule includes the CSV `unit`, a human-readable `location`, and a Python regular expression `pattern`. For PDF rules, add the one-based `page` to constrain matching. For categorical fields, provide a fixed normalized `value` backed by the match. For numeric fields, capture the number in a group named `value` and provide a `reported_unit` and decimal `factor` if conversion is needed. Use `note` to record relevant conditions, caveats, or uncertainty. The license object also accepts an optional `pattern` and `page` to verify the license notice in the source.
 
+Numeric rules may also specify an `offset` in the CSV unit. The extractor adds the offset after multiplication and records both operations in the JSON report. Use the note to state the reference and assumptions for derived values.
+
 The profile author identifies the setup and checks that each result belongs to the right catalyst, operating point, and unit. Only a unique match populates a registered field. Unmapped fields stay blank. Use a reviewed source table or dataset when an exact number is available. A value read from a plot needs a documented digitization method and an uncertainty or precision estimate before it can be compared with tabulated values.
 
 The output contains a UTF-8 CSV and two review reports. Open the HTML report in a browser to find values by column ID, descriptor, or sample name. It links to the publication and, when a local PDF was supplied, to the relevant page. The JSON report records the original number, unit conversions, source locations, and SHA-256 checksums of the source, profile and CSV. License evidence is recorded per source. The output is for internal review and carries no publication approval.
 
 The `--add-electrode-and-durability-rows` option adds the agreed `Electrode role` and `Durability current density` descriptors when absent. Additional descriptors require an update to the gallery CSV and mappings.
 
-## Build a multi-publication NOMAD upload
+## Build one NOMAD upload per publication
 
 ```sh
 electrolyse-gallery-import gallery-extended.csv gallery-review.json --output-dir output/imports
 ```
 
-The command checks the CSV against the extraction report and creates one archive per sample column. The Explore ZIP uses the installed Electrolysis schema and requires plugin version 0.4.0 or later. The standalone ZIP embeds the schema and opens through NOMAD's archive parser. Use one ZIP per upload. Both packages include the review and license records and are intended for unpublished testing.
+The command checks the CSV against the extraction report, creates one archive per sample column, and groups the archives by DOI. Each DOI produces one ZIP with its own source review and license evidence. ZIP filenames are based on the DOI and remain stable when the records for that DOI are updated. Keep publications in separate NOMAD uploads so that each paper can be updated and reviewed for publication independently.
 
-Use `--components` to provide a reviewed JSON object mapping component names to lists of element symbols. If the CSV contains columns from the original JATS workflow, supply the original XML with `--article-xml`. Those columns keep their source-based measurements and conflict checks.
+The default Explore ZIPs use the installed Electrolysis schema and require plugin version 0.4.0 or later on the target instance. Use `--standalone` to produce one ZIP per DOI with the schema embedded. The export also writes a combined JSON review for local evaluation. All packages are marked `test_only`. Review the license evidence and any supplementary sources before publishing an upload.
+
+Use `--components` to provide a reviewed JSON object mapping component names to lists of element symbols. If the CSV contains columns from the original JATS workflow, supply the original XML with `--article-xml`. The extractor keeps source-supported values and lists omitted CSV values and any explicitly documented estimates in the review report.
 
 ## Build a publication-specific NOMAD upload
 
@@ -43,9 +47,9 @@ This command expects the source gallery CSV for the publication-specific workflo
 
 1. **Validate the inputs.** Read the UTF-8 gallery CSV, check the publication label and identify the sample mapped to each column. Verify the source identifiers and an article-level CC BY 4.0 notice in the JATS XML.
 2. **Extract published values.** Apply rules to specific XML sections and figure captions. For each match, record the original value, unit and XML location. Missing or ambiguous matches for required extraction rules stop the run.
-3. **Reconcile with the gallery.** Match measurements to the CSV fields and normalize units for comparison. The review report preserves disagreements and identifies values carried over solely from the CSV. Characterization fields record whether the method was reported for the catalyst.
+3. **Reconcile with the gallery.** Match measurements to the CSV fields and normalize units for comparison. The review records disagreements, omitted values, and any documented estimates. Characterization fields record methods reported for the catalyst.
 4. **Write the import.** Create one flat archive per sample column. The archive contains the gallery fields, relevant operating points and searchable method and element summaries. Detailed evidence stays in the review report.
 
 ## Review the output
 
-The output directory contains a ZIP for NOMAD and a standalone JSON review report. The ZIP includes the same report alongside the archives. The report includes per-field checks, original and imported values, XML locations and source checksums. Values carried over solely from the CSV are identified as `csv_only`. Inspect conflicts, unresolved values and the license evidence before using the data. The generated packages are marked `test_only` and intended for unpublished validation uploads.
+For the publication-specific command, the output directory contains a ZIP for NOMAD and a separate copy of the JSON review inside that ZIP. The review includes per-field checks, original and imported values, XML locations, and source checksums.

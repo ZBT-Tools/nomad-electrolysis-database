@@ -34,24 +34,22 @@ UNIT_ALIASES = {
     'mg/cm²': 'mg/cm^2',
     'V @ 1A / cm^2': 'V',
 }
-SETUP_UNITS = {'Electrolyte concentration': 'mol/L', 'Temperature (cell)': '°C'}
-CSV_OPERATING_FIELDS = {
-    'pH': ('ph', {'': 1}),
-    'Temperature (cell)': ('cell_temperature', {'°C': 1}),
-    'Temperature (electrolyte)': ('electrolyte_temperature', {'°C': 1}),
-    'Catalyst loading': ('catalyst_loading', {'mg/cm^2': 1}),
-    'Degradation': (
-        'degradation_rate',
-        {'mV/h': 1000, 'µV/h': 1, 'uV/h': 1, 'µV h^-1': 1},
-    ),
+SETUP_UNITS = {
+    'Electrolyte concentration': 'mol/L',
+    'pH': '',
+    'Temperature (cell)': '°C',
+    'Temperature (electrolyte)': '°C',
+    'Catalyst loading': 'mg/cm^2',
 }
 GALLERY_FIELD_MAP = {
     'Catalyst': ('catalyst', None),
     'Reaction': ('reaction', None),
     'Electrolyte': ('electrolyte', None),
+    'Electrolyte concentration': ('electrolyte_concentration', 'mol/L'),
     'Technology': ('technology', None),
     'Membrane': ('membrane', None),
     'Test type': ('test_type', None),
+    'Electrode role': ('electrode_role', None),
     'Synthesis': ('synthesis', None),
     'pH': ('ph', None),
     'Temperature (cell)': ('cell_temperature', '°C'),
@@ -65,6 +63,7 @@ GALLERY_FIELD_MAP = {
     'ECSA': ('double_layer_capacitance_areal', 'µF/cm²'),
     'Performance': ('cell_voltage_at_1_a_cm2', 'V at 1 A/cm²'),
     'Stability': ('durability_hours', 'h'),
+    'Durability current density': ('durability_current_density', 'A/cm²'),
     'Degradation': ('degradation_rate', 'µV/h'),
 } | {label: (field, None) for label, field in CHARACTERIZATION_FIELDS.items()}
 
@@ -152,16 +151,10 @@ def compare_field(field, csv_cell, setup, column_info, metric):  # noqa: PLR0911
             )
         status, note = compare_number(raw, csv_unit, value, metric['unit'])
         return status, note, value
-    if field == 'pH':
-        return (
-            'review',
-            'Check the pH and whether it was measured or estimated; preserve the original qualifier.',
-            None,
-        )
     if field == 'Electrolyte concentration' and 'feed_medium' in setup:
         return (
             'review',
-            'DI-water feed is reported; verify the species and meaning of the CSV concentration.',
+            'Water is the feed medium. The CSV value is not a reported electrolyte concentration.',
             None,
         )
     if field == 'Degradation':
@@ -170,21 +163,6 @@ def compare_field(field, csv_cell, setup, column_info, metric):  # noqa: PLR0911
             'CSV rate and evaluation interval were not verified in the main article.',
             None,
         )
-    if field == 'Synthesis':
-        return (
-            'review',
-            'Electrodeposition is reported. Check thermal treatment and post-deposition steps for each sample.',
-            'Electrodeposition',
-        )
-    if field == 'Test type':
-        note = 'Three-electrode setup is reported; verify the vessel geometry.'
-        if column_info['setup'] == 'pem_single_cell':
-            return (
-                'matched',
-                'The article reports a PEM single cell.',
-                column_info['setup'],
-            )
-        return 'review', note, column_info['setup']
     if field == 'Technology' and 'technology' not in setup:
         return (
             'review',
@@ -198,6 +176,9 @@ def compare_field(field, csv_cell, setup, column_info, metric):  # noqa: PLR0911
         'Electrolyte': setup.get('electrolyte', setup.get('feed_medium')),
         'Membrane': setup.get('membrane'),
         'Technology': setup.get('technology'),
+        'Test type': setup.get('test_type'),
+        'Synthesis': setup.get('synthesis'),
+        'Electrode role': setup.get('electrode_role'),
     }.get(field)
     if source_text is not None:
         agrees = raw.strip().casefold() == source_text.casefold()
@@ -207,13 +188,17 @@ def compare_field(field, csv_cell, setup, column_info, metric):  # noqa: PLR0911
             source_text,
         )
 
-    source_quantity = {
-        'Electrolyte concentration': setup.get('electrolyte_concentration'),
-        'Temperature (cell)': setup.get('cell_temperature'),
-    }.get(field)
-    if source_quantity is not None:
+    source_quantity = setup.get(GALLERY_FIELD_MAP.get(field, (None, None))[0])
+    if (
+        field in SETUP_UNITS
+        and source_quantity is not None
+        and not (field == 'pH' and setup.get('ph_estimated'))
+    ):
         status, note = compare_number(
-            raw, csv_unit, source_quantity, SETUP_UNITS[field]
+            raw.lstrip('~≈') if field == 'pH' else raw,
+            csv_unit,
+            source_quantity,
+            SETUP_UNITS[field],
         )
         return status, note, source_quantity
     return (
@@ -286,8 +271,7 @@ def reconcile(fields, evidence, by_field, archives):
             elif source_value is not None:
                 source_unit = SETUP_UNITS.get(field)
                 reference = setup['setup_reference']
-                if source_unit:
-                    locator = setup.get('setup_numeric_locator')
+                locator = setup.get('field_locators', {}).get(field)
             if field in CHARACTERIZATION_FIELDS:
                 method = evidence['characterization'][field]
                 status = method['status']
@@ -300,6 +284,10 @@ def reconcile(fields, evidence, by_field, archives):
                         if csv_boolean(raw_value) == source_value
                         else 'conflict'
                     )
+            setup_note = setup.get('field_notes', {}).get(field)
+            if setup_note:
+                detail = f'{detail} {setup_note}'
+                locator = locator or setup.get('field_locators', {}).get(field)
             check = {
                 'column': column,
                 'row': cell['row'],
@@ -318,8 +306,25 @@ def reconcile(fields, evidence, by_field, archives):
                 check['imported_quantity'] = quantity
                 check['imported_value'] = entry.get(quantity)
                 check['imported_unit'] = unit
-                if quantity in entry['csv_only_fields']:
-                    check['import_basis'] = 'csv_only'
+                if field == 'pH' and setup.get('ph_estimated'):
+                    check.update(
+                        status='estimated',
+                        import_basis='nominal_pure_water_ph',
+                        detail=(
+                            'Nominal pH 7 for pure feed water at 25 °C, based on '
+                            'the documented deionized-water feed. The article does '
+                            'not report a pH measurement. Neutral pH depends on '
+                            'temperature, so this is not the pH of the cell at 60 °C.'
+                        ),
+                        article_locator=setup.get('field_locators', {}).get(
+                            'Electrolyte'
+                        ),
+                        article_reference=setup['setup_reference'],
+                    )
+                elif raw_value and quantity not in entry:
+                    check['import_basis'] = 'omitted_unverified'
+                elif quantity in entry:
+                    check['import_basis'] = 'source_evidence'
             checks.append(check)
     return checks
 
@@ -385,22 +390,7 @@ def csv_boolean(raw_value):
     return values[normalized]
 
 
-def add_gallery_fields(data, fields, evidence, measurements):
-    column = data['csv_column']
-    csv_only = []
-    for label, quantity in (
-        ('Technology', 'technology'),
-        ('Synthesis', 'synthesis'),
-        ('Test type', 'test_type'),
-    ):
-        cell = fields.get(label)
-        raw = cell['values'][column].strip() if cell else ''
-        if raw and quantity not in data:
-            data[quantity] = 'Single-cell' if raw.casefold() == 'single-cell' else raw
-            if quantity != 'synthesis' and not (
-                quantity == 'test_type' and data['setup_type'] == 'pem_single_cell'
-            ):
-                csv_only.append(quantity)
+def add_gallery_fields(data, evidence, measurements):
     if 'feed_medium' in data:
         data['electrolyte'] = data['feed_medium']
 
@@ -415,43 +405,22 @@ def add_gallery_fields(data, fields, evidence, measurements):
         if match:
             factor = 1000 if quantity == 'double_layer_capacitance_areal' else 1
             data[quantity] = round(match['value'] * factor, 12)
-    for label, (quantity, conversions) in CSV_OPERATING_FIELDS.items():
-        if quantity in data or label not in fields:
-            continue
-        cell = fields[label]
-        raw = cell['values'][column].strip()
-        if not raw:
-            continue
-        unit = UNIT_ALIASES.get(cell['unit'], cell['unit'])
-        if unit not in conversions:
-            raise ValueError(f'Unsupported CSV unit {unit!r} for {label} ({column}).')
-        approximate = raw.startswith(('~', '≈'))
-        data[quantity] = round(number(raw.lstrip('~≈')) * conversions[unit], 12)
-        csv_only.append(quantity)
-        if quantity == 'ph':
-            data['ph_approximate'] = approximate
-
-    add_characterization_fields(data, fields, evidence['characterization'], csv_only)
-    data['csv_only_fields'] = csv_only
+    add_characterization_fields(data, evidence['characterization'])
 
 
-def add_characterization_fields(data, fields, characterization, csv_only):
+def add_characterization_fields(data, characterization):
     present_methods = []
     for label, quantity in CHARACTERIZATION_FIELDS.items():
         presence = characterization[label]['present']
         if presence is None:
-            cell = fields.get(label)
-            raw = cell['values'][data['csv_column']] if cell else ''
-            presence = csv_boolean(raw)
-            if raw.strip():
-                csv_only.append(quantity)
+            continue
         data[quantity] = presence
         if presence:
-            present_methods.append(f'{label} (CSV)' if quantity in csv_only else label)
+            present_methods.append(label)
     data['characterization_methods'] = ', '.join(present_methods)
 
 
-def make_archives(evidence, by_column, fields, explore=False):
+def make_archives(evidence, by_column, explore=False):
     article = next(
         source for source in evidence['sources'] if source['id'] == 'article'
     )
@@ -465,7 +434,8 @@ def make_archives(evidence, by_column, fields, explore=False):
         setup = {
             field: value
             for field, value in evidence['setups'][info['setup']].items()
-            if field not in {'setup_reference', 'setup_numeric_locator'}
+            if field
+            not in {'setup_reference', 'field_locators', 'field_notes', 'ph_estimated'}
         }
         setup_label = (
             'PEM single cell' if info['setup'] == 'pem_single_cell' else 'OER half cell'
@@ -489,7 +459,7 @@ def make_archives(evidence, by_column, fields, explore=False):
             'release_status': 'test_only',
             **benchmark_values(measurements, info['setup']),
         }
-        add_gallery_fields(data, fields, evidence, measurements)
+        add_gallery_fields(data, evidence, measurements)
         elements = set()
         for field in COMPONENT_FIELDS:
             if field in data:
@@ -536,10 +506,10 @@ def build_package(csv_path, output_dir, article_path, explore=False):
     fields = read_gallery_csv(payload, evidence['columns'])
     evidence = extract_fulltext(article_path.read_bytes(), evidence)
     by_column, by_field = measurement_records(evidence)
-    files = make_archives(evidence, by_column, fields, explore)
+    files = make_archives(evidence, by_column, explore)
     checks = reconcile(fields, evidence, by_field, files)
     report = {
-        'format_version': 6,
+        'format_version': 7,
         'release_status': 'test_only',
         'doi': evidence['doi'],
         'citation': evidence['citation'],
@@ -560,7 +530,7 @@ def build_package(csv_path, output_dir, article_path, explore=False):
             },
             {
                 'field': 'Degradation',
-                'table_unit': 'µV/h',
+                'table_unit': 'mV/h',
                 'paper_unit': 'mV/h',
                 'note': 'Both the article and the CSV use mV/h. Gallery values are multiplied by 1000 for µV/h.',
             },
@@ -575,6 +545,7 @@ def build_package(csv_path, output_dir, article_path, explore=False):
         'measurements': dict(by_column),
         'notes': [
             'Archives contain flat comparison fields. Measurement and license evidence and original CSV values are in this report.',
+            'The CSV is used for sample identification and comparison. Values lacking support are omitted from the archive.',
             'Each sample column has one archive. Trial count refers to the distinct methods within each column.',
             'A matching CSV value does not imply that every measurement condition was reported.',
             'The NOMAD element index contains the union of the documented components in each trial.',

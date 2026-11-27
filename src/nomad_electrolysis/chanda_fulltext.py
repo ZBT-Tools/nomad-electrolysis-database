@@ -103,7 +103,7 @@ def characterization_presence(root):
         'present': None,
         'status': 'review',
         'source_locator': dry_locator,
-        'note': 'Dry XANES is reported. The main text does not establish whether it was measured outside the operando setup. The CSV flag is retained.',
+        'note': 'Dry XANES is reported. Measurement outside the operando setup is unconfirmed.',
     }
     _, icp_locator = capture(
         root,
@@ -112,14 +112,14 @@ def characterization_presence(root):
         'ICP analytical method',
     )
     methods['ICP-MS'] = {
-        'present': False,
+        'present': None,
         'status': 'not_reported',
         'source_locator': icp_locator,
         'note': 'The main article reports ICP-OES for the half-cell electrolyte. ICP-MS is not reported.',
     }
     for label in ('Raman in-situ', 'Raman ex-situ'):
         methods[label] = {
-            'present': False,
+            'present': None,
             'status': 'not_reported',
             'source_locator': None,
             'note': 'No Raman characterization for the catalyst is reported in the checked main article.',
@@ -220,6 +220,18 @@ def extract_fulltext(payload, evidence):
         RESULTS,
         r'Prior to HFR correction \(Figure 4a\)',
         'PEM voltage correction',
+    )
+    _, synthesis_path = capture(
+        root,
+        RESULTS,
+        'synthesized by anodic galvanostatic electrodeposition',
+        'synthesis',
+    )
+    _, setup_path = capture(
+        root,
+        RESULTS,
+        'Based on the improved three-electrode performance',
+        'cell setups',
     )
     pem_duration, pem_duration_path = capture(
         root,
@@ -329,11 +341,19 @@ def extract_fulltext(payload, evidence):
     evidence['extraction_method'] = 'chanda_jats_rules_v1'
     evidence['characterization'] = characterization_presence(root)
     evidence['setups']['oer_half_cell']['electrolyte_concentration'] = float(eis[3])
-    evidence['setups']['oer_half_cell']['setup_numeric_locator'] = eis_path
+    for setup in evidence['setups'].values():
+        setup.setdefault('field_locators', {}).update(
+            {'Test type': setup_path, 'Synthesis': synthesis_path}
+        )
+    evidence['setups']['oer_half_cell']['field_locators'][
+        'Electrolyte concentration'
+    ] = eis_path
     evidence['setups']['pem_single_cell'].update(
         active_area=float(pem_setup[1]),
         cell_temperature=float(pem_setup[2]),
-        setup_numeric_locator=pem_setup_path,
+    )
+    evidence['setups']['pem_single_cell']['field_locators']['Temperature (cell)'] = (
+        pem_setup_path
     )
     evidence['methods']['lsv'].update(
         scan_rate=float(scan[1]), method_locator=scan_path

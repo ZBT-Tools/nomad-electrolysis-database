@@ -75,6 +75,8 @@ def extract_cell(rule, pages, unit):
     else:
         factor = Decimal(rule.get('factor', '1'))
         converted = Decimal(original.replace(',', '.')) * factor
+        if 'offset' in rule:
+            converted += Decimal(rule['offset'])
         if not converted.is_finite():
             raise ValueError('Non-finite numeric CSV value')
         value = format(converted, 'f')
@@ -84,10 +86,12 @@ def extract_cell(rule, pages, unit):
         'reported_number': original,
         'reported_unit': rule.get('reported_unit'),
         'factor': rule.get('factor'),
+        'offset': rule.get('offset'),
         'page': rule.get('page'),
         'location': rule['location'],
         'reference_url': rule.get('reference_url'),
         'note': rule.get('note'),
+        **({'method': rule['method']} if 'method' in rule else {}),
     }
 
 

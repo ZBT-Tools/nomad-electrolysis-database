@@ -14,6 +14,9 @@
       "url": "https://pmc.ncbi.nlm.nih.gov/articles/instance/13533152/bin/SMSC-6-e70388-s001.pdf",
       "status": "unverified",
       "included": false,
+      "used_to_verify": true,
+      "fulltext_url": "https://pmc-oa-opendata.s3.amazonaws.com/PMC13533152.1/SMSC-6-e70388-s001.pdf",
+      "fulltext_sha256": "eca92cec1ec566daa742225e7eb063e8722b784c3f81f3b105cecaf20c7819c3",
       "reason": "No applicable license verified for the supplement."
     },
     {
@@ -48,7 +51,22 @@
     "oer_half_cell": {
       "electrolyte": "H2SO4",
       "substrate": "Pt-coated titanium felt",
-      "setup_reference": "Section 2 and Figure 3"
+      "test_type": "Three-electrode cell",
+      "electrode_role": "Anode",
+      "synthesis": "Electrodeposition",
+      "ph": 0.22,
+      "ph_approximate": true,
+      "setup_reference": "Section 2, Figure 3 and Supporting Information",
+      "field_locators": {
+        "pH": "https://pmc-oa-opendata.s3.amazonaws.com/PMC13533152.1/SMSC-6-e70388-s001.pdf#page=6",
+        "Catalyst loading": "https://pmc-oa-opendata.s3.amazonaws.com/PMC13533152.1/SMSC-6-e70388-s001.pdf#page=7"
+      },
+      "field_notes": {
+        "pH": "The Supporting Information reports approximately pH 0.22 for 0.5 M sulfuric acid without specifying how pH was determined.",
+        "Catalyst loading": "The Supporting Information reports 1.09 ± 0.08 mg/cm² for the base MnO2 electrode and about 7.5 mg/cm² for long-term chronopotentiometry. This mixed-protocol entry has no single representative loading.",
+        "Synthesis": "Galvanostatic electrodeposition and thermal treatment. Doped materials also undergo spray coating with dopant precursors and annealing.",
+        "Test type": "Three-electrode configuration is documented. The vessel geometry is unspecified."
+      }
     },
     "pem_single_cell": {
       "technology": "PEM",
@@ -56,7 +74,25 @@
       "substrate": "Pt-coated titanium felt",
       "membrane": "Nafion 115",
       "cathode_catalyst": "20 wt% Pt/C",
-      "setup_reference": "Section 2 and Figure 4"
+      "test_type": "Single-cell",
+      "electrode_role": "Anode",
+      "synthesis": "Electrodeposition",
+      "electrolyte_temperature": 60,
+      "catalyst_loading": 7.5,
+      "ph": 7,
+      "ph_approximate": true,
+      "ph_estimated": true,
+      "setup_reference": "Section 2, Figure 4 and Supporting Information",
+      "field_locators": {
+        "Electrolyte": "https://pmc-oa-opendata.s3.amazonaws.com/PMC13533152.1/SMSC-6-e70388-s001.pdf#page=8",
+        "Temperature (electrolyte)": "https://pmc-oa-opendata.s3.amazonaws.com/PMC13533152.1/SMSC-6-e70388-s001.pdf#page=8",
+        "Catalyst loading": "https://pmc-oa-opendata.s3.amazonaws.com/PMC13533152.1/SMSC-6-e70388-s001.pdf#page=7"
+      },
+      "field_notes": {
+        "Catalyst loading": "Approximate loading of the anode catalyst used for electrolyzer testing. The Supporting Information reports about 7.5 mg/cm².",
+        "Temperature (electrolyte)": "The Supporting Information reports 60 °C for the feed water and the cell.",
+        "Synthesis": "Galvanostatic electrodeposition, spray coating with dopant precursors, and annealing."
+      }
     }
   },
   "methods": {
